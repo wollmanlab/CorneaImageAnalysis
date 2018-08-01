@@ -110,22 +110,5 @@ R.saveResults
 %At this point, we should have a results object with PIV data and single
 %cell data. Party time.
 
-%%
-%% Single cell analysis for incuscope cornea data
-BaseStr = regexprep([char(ispc.*'Z:\Images2018\') char(isunix.*'/bigstore/Images2018/')],char(0),'');
-Usr = 'Jen';
-Project = 'CorneaCCM';
-Dataset = 'WoundAgarTitr_2018Mar16_2018May01';
-acquisition = 2;
-%% Get MD of SAR data
-acqname = ['acq_' num2str(acquisition)];
-fpath = [BaseStr Usr filesep Project filesep Dataset filesep acqname filesep 'SAR'];
-MD=Metadata(fpath);
-Wells = unique(MD.getSpecificMetadata('Position'));
-frames = unique(cell2mat(MD.getSpecificMetadata('frame')));
-Zindexes = max(unique(cell2mat(MD.getSpecificMetadata('Zindex'))));
-zAspect = 11;
-
 
 %%
-R = MultiPositionSingleCellWoundResults(fpath)
