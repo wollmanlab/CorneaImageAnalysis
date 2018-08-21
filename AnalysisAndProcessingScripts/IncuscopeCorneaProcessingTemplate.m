@@ -195,13 +195,21 @@ for j=1:length(Wells);
     PixelSize = MD.getSpecificMetadata('PixelSize','Position',Wells{j},'Channel','DeepBlue', 'Zindex', 1);
     
     for i=1:length(flistDo)
-        PIV_MD.addNewImage([Wells{j} filesep flistDo{i}],'TimestampFrame',tf(i),'Type','FocusMap','Channel',Channel,'Fluorophore',Fluorophore,'Marker',Marker,'Position', Wells{j},'frame',i,'PixelSize',PixelSize, 'driftTform',driftTforms{i},'Zplanes',Zindexes );
+        PIV_MD.addNewImage([Wells{j} filesep flistDo{i}],'TimestampFrame',tf(i),'Type','FocusMap','Channel',Channel,'Fluorophore',Fluorophore,'Marker',Marker,'Position', Wells{j},'frame',i,'PixelSize',PixelSize, 'driftTform',driftTforms{i},'Zplanes',Zindexes);
     end;   
 end;
 
 PIV_MD.saveMetadataMat(fpathresults);
 
+%% save registered pics for PIV
+EDoFChannel = {'DeepBlue'};
 
+for j=1:numel(Wells)
+    Data = stkread(PIV_MD,'Channel',EDoFChannel{1},'Type', 'EDOF', 'flatfieldcorrection', false, 'Position', Wells{j},'register',true);
+    for i=1:size(Data,3)
+        imwrite(uint16(Data(:,:,i)*2^16),sprintf('%sReg_EDOF_%s_%3.3d%s',[fpathresults filesep Wells{j} filesep],EDoFChannel{1},i,'.tiff'));
+    end
+end
 
 %% Get MD of SAR data
 acqname = ['acq_' num2str(acquisition)];
@@ -222,9 +230,12 @@ PIV_MD = Metadata(fpathresults);
 Wells = unique(PIV_MD.getSpecificMetadata('Position'));
 frames = unique(cell2mat(PIV_MD.getSpecificMetadata('frame')));
 
+
+
+
 %% New way to make movies
 j=1
-Data = stkread(PIV_MD,'sortby','Channel','Type', 'EDOF', 'flatfieldcorrection', false, 'Position', Wells{j},'register',true,'resize', 0.5);
+Data = stkread(PIV_MD,'sortby','Channel','Type', 'EDOF', 'flatfieldcorrection', false, 'Position', Wells{j},'resize', 0.5,'register',true);
 
 stkshow(Data);
 Channels = unique(PIV_MD,'Channel');
@@ -262,7 +273,9 @@ PIV_MD = Metadata(fpathresults);
 Wells = unique(PIV_MD.getSpecificMetadata('Position'));
 frames = unique(cell2mat(PIV_MD.getSpecificMetadata('frame')));
 %% Open jpiv and make sure all parameters are right
-    system(sprintf('cd %s; java -jar -Xmx4G /home/alon/bin/JPIV/jpivlib/jpivc.jar %s &',fpthpos))
+    fpthpos = [fpathresults filesep Wells{1}];
+
+    system(sprintf('cd %s; java -jar -Xmx16G /home/alon/bin/JPIV/jpivlib/jpivc.jar %s &',fpthpos))
     %General: Consecutive 1+2 2+3 ...
     %Window:
     %Multi pass: 3
@@ -273,8 +286,8 @@ frames = unique(cell2mat(PIV_MD.getSpecificMetadata('frame')));
 %% Run batch PIV analysis by sequence ([1-2], [2-3]...)
 for j=1:length(Wells)
     fpthpos = [fpathresults filesep Wells{j}];
-    flistDo = getFlistbyPattern('EDOF_DeepBlue', fpthpos);
-    system(sprintf('cd %s; java -jar -Xmx4G /home/alon/bin/JPIV/jpivlib/jpivc.jar %s &',fpthpos,strjoin(flistDo,' ')))
+    flistDo = getFlistbyPattern('Reg_EDOF_DeepBlue', fpthpos);
+    system(sprintf('cd %s; java -jar -Xmx16G /home/alon/bin/JPIV/jpivlib/jpivc.jar %s &',fpthpos,strjoin(flistDo,' ')))
 end;
 %% Do post-analysis of PIV - removing spurious vectors, etc.
 %results will be saved in the same folder as PIV_Results_001,2,3...

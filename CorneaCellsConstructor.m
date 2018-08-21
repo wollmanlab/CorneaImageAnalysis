@@ -102,23 +102,7 @@ function CorneaCelllbl = CorneaCellsConstructor(fpath, Well,frame)
     upperdZ = x(find(cdfdZ>0.99,1));
     lowerdZ = x(find(cdfdZ>0.02,1)-1);
     indx = logical((DistFromManifold>lowerdZ).*(DistFromManifold<upperdZ));%indices to keeo for final calculation
-    
-%     F = scatteredInterpolant(Centroids(indx,1),Centroids(indx,2),Centroids(indx,3),'linear','nearest');
-%     zz = F(xx,yy);
-%     zz = imgaussfilt(zz,100);
-% 
-%     TopoZ = interp2(xx,yy,zz,Centroids(:,1),Centroids(:,2),'nearest');
-%     %aha!
-%     DT = delaunayTriangulation([Centroids(:,1),Centroids(:,2),TopoZ]);
-%     [~, DistFromManifold] = nearestNeighbor(DT,Centroids);
-%     DistFromManifold = DistFromManifold.*sign(Centroids(:,3)-TopoZ);
-%     
-%     %
-%     [h,x] = hist(DistFromManifold,1000); %Find ouliers
-%     cdfdZ = cumsum(h)/sum(h);
-%     upperdZ = x(find(cdfdZ>0.99,1));
-%     lowerdZ = x(find(cdfdZ>0.03,1)-1);
-%     indx = logical((DistFromManifold>lowerdZ).*(DistFromManifold<upperdZ));%indices to keeo for final calculation
+
     
     Centroids = Centroids(indx,:);
     TopoZ = TopoZ(indx);

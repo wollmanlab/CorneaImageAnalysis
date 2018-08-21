@@ -11,11 +11,15 @@ classdef CorneaCellsLbl < handle %class of single cell processing of a whole cor
         num
         
         TopoZ
-        %GridZ 
+        %GridZ
         CC
-
+        %Properties related to tracking
         Link12Mat
         Link21Mat
+        %Properties related to epithelium position
+        FitParam
+        Jepi
+        epiScore
     end
     
     properties (Transient = true)
@@ -29,25 +33,116 @@ classdef CorneaCellsLbl < handle %class of single cell processing of a whole cor
     
     
     methods
+        
+%         function epiRank = epiRank(W)
+%             [h,x] = hist(W.epiScore,250);
+%             dataCDF = cumsum(h)/sum(h);
+%             epiRank = interp1(x,dataCDF,W.epiScore);
+%             epiRank(isnan(W.epiScore))=NaN;
+%         end
+        
+        function scatter3(W,varargin)
+            tzeva = viridis(length(W.Centroids));
+            dz=0;
+            if nargin==4;
+                dz = varargin{3};
+            end
+            if nargin==1
+                scatter3(W.Centroids(:,1),W.Centroids(:,2),dz-W.Centroids(:,3),[],tzeva);
+            else
+                range = varargin{1};
+                if strcmp(range,'epi')
+                    tzeva = viridis(length(W.Jepi));
+                    if nargin>=3;
+                        range = varargin{2};
+                        if any(~ismember(range,W.Jepi))
+                            range = range(ismember(range,W.Jepi));
+                            if ~isempty(range)
+                                disp('some of the range points are not in the epithelium, drawing the ones that are.')
+                            else
+                                disp('all of the range points are not in the epithelium, drawing entire epithelium.')
+                                range = W.Jepi;
+                            end
+                        end
+                    else
+                        range = W.Jepi;
+                    end
+                    if any(range>max(W.Jepi))
+                        range = W.Jepi;
+                        disp('range out of bounds, drawing all points.')
+                        scatter3(W.Centroids(range,1),W.Centroids(range,2),dz-W.Centroids(range,3),[],tzeva((ismember(W.Jepi,range)),:));
+                    else
+                        h = scatter3(W.Centroids(range,1),W.Centroids(range,2),dz-W.Centroids(range,3),[],tzeva((ismember(W.Jepi,range)),:),'filled','MarkerFaceAlpha',0.25);
+                    end;
+                else
+                    if any(range>W.num)
+                        range = range(1):W.num;
+                        disp('range out of bounds, drawing all points up to the total # of cells.')
+                        scatter3(W.Centroids(range,1),W.Centroids(range,2),dz-W.Centroids(range,3),[],tzeva(range,:));
+                    else
+                        scatter3(W.Centroids(range,1),W.Centroids(range,2),dz-W.Centroids(range,3),[],tzeva(range,:));%,'filled','MarkerFaceAlpha',0.3
+                    end;
+                end
+            end
+            %scatter(Centroids(:,1),Centroids(:,2),[],parula(length(Centroids)));
+            set(gca,'xlim',[-200 3000],'ylim',[-200 2500],'zlim',[-500, 500],'CameraPositionMode','manual','CameraPosition',[14576  12003  6861])
+            %hold on
+            %shg
+            
+        end
+        
+        
+        
+        
         function scatter(W,varargin)
             tzeva = viridis(length(W.Centroids));
             if nargin==1
-                scatter3(W.Centroids(:,1),W.Centroids(:,2),-W.Centroids(:,3),[],tzeva);
+                scatter(W.Centroids(:,1),W.Centroids(:,2),[],tzeva);
             else
                 range = varargin{1};
-                if any(range>W.num)
-                    range = range(1):W.num;
-                    disp('range out of bounds, drawing all points up to the total # of cells.')
-                end;
-                scatter3(W.Centroids(range,1),W.Centroids(range,2),-W.Centroids(range,3),[],tzeva(range,:));
+                if strcmp(range,'epi')
+                    tzeva = viridis(length(W.Jepi));
+                    if nargin>=3;
+                        range = varargin{2};
+                        if any(~ismember(range,W.Jepi))
+                            range = range(ismember(range,W.Jepi));
+                            if ~isempty(range)
+                                disp('some of the range points are not in the epithelium, drawing the ones that are.')
+                            else
+                                disp('all of the range points are not in the epithelium, drawing entire epithelium.')
+                                range = W.Jepi;
+                            end
+                        end
+                    else
+                        range = W.Jepi;
+                    end
+                    if any(range>max(W.Jepi))
+                        range = W.Jepi;
+                        disp('range out of bounds, drawing all points.')
+                        scatter(W.Centroids(range,1),W.Centroids(range,2),[],tzeva((ismember(W.Jepi,range)),:));
+                    else
+                        scatter(W.Centroids(range,1),W.Centroids(range,2),[],tzeva((ismember(W.Jepi,range)),:));
+                    end;
+                else
+                    if any(range>W.num)
+                        range = range(1):W.num;
+                        disp('range out of bounds, drawing all points up to the total # of cells.')
+                        scatter(W.Centroids(range,1),W.Centroids(range,2),[],tzeva(range,:));
+                    else
+                        scatter(W.Centroids(range,1),W.Centroids(range,2),[],tzeva(range,:));
+                    end;
+                end
             end
             %scatter(Centroids(:,1),Centroids(:,2),[],parula(length(Centroids)));
-            set(gca,'xlim',[-200 3000],'ylim',[-200 3000],'CameraPositionMode','manual','CameraPosition',[-5685       -6469        3001])
+            set(gca,'xlim',[-200 3000],'ylim',[-200 2500])
             %hold on
             shg
-            drawnow
-            pause(0.01)
+            
         end
+        
+        
+        
+        
         
         function stkshow(W)
             MD=Metadata(W.pth);
@@ -74,11 +169,11 @@ classdef CorneaCellsLbl < handle %class of single cell processing of a whole cor
             %stkshow(RChannel)
             %stkshow(GChannel)
             %stkshow(BChannel)
-            %MIJ.run('Merge Channels...', 'c1=RChannel c2=GChannel c3=BChannel create');            
+            %MIJ.run('Merge Channels...', 'c1=RChannel c2=GChannel c3=BChannel create');
         end
         
         
-        function scattershow(W)
+        function scattershow(W,varargin)
             MD=Metadata(W.pth);
             
             Data =  stkread(MD,'Channel','DeepBlue', 'flatfieldcorrection', false, 'frame', W.Frame, 'Position', W.PosName,'register',false);
@@ -87,10 +182,15 @@ classdef CorneaCellsLbl < handle %class of single cell processing of a whole cor
             BChannel=zeros(size(Data));
             [h,x] = hist(log(datasample(Data(:),min(1000000,numel(Data(:))))),1000);
             maxC = exp(x(find(cumsum(h)./sum(h)>0.995,1,'first')));
-            cmap = parula(W.CC.NumObjects)*maxC*1.5;%scale colormap so that data and centroids are all visible
-            
-            for i=1:W.CC.NumObjects
-                indexToChange = W.CC.PixelIdxList{i};
+            if strcmp(varargin{1},'epi')
+                range = W.Jepi'
+            else
+                range = 1:W.CC.NumObjects;
+            end
+            cmap = viridis(numel(range))*maxC*1.5;%scale colormap so that data and centroids are all visible
+
+            for i=1:numel(range)
+                indexToChange = W.CC.PixelIdxList{range(i)};
                 RChannel(indexToChange)=cmap(i,1); %Replace actual pixel values with relevant RGB value
                 GChannel(indexToChange)=cmap(i,2);
                 BChannel(indexToChange)=cmap(i,3);
@@ -100,10 +200,6 @@ classdef CorneaCellsLbl < handle %class of single cell processing of a whole cor
             stkshow(RGB);
             MIJ.selectWindow('RGB');
             MIJ.run('Stack to Hyperstack...', ['order=xyzct channels=3 slices=' num2str(size(Data,3)) ' frames=1 display=Composite']);
-            %stkshow(RChannel)
-            %stkshow(GChannel)
-            %stkshow(BChannel)
-            %MIJ.run('Merge Channels...', 'c1=RChannel c2=GChannel c3=BChannel create');            
         end
         
     end
