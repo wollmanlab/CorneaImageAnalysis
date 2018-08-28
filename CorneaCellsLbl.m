@@ -172,6 +172,20 @@ classdef CorneaCellsLbl < handle %class of single cell processing of a whole cor
             %MIJ.run('Merge Channels...', 'c1=RChannel c2=GChannel c3=BChannel create');
         end
         
+        function Density = Density(W,Nbins,J1)
+            
+            xx = W.Centroids(:,1);
+            yy = W.Centroids(:,2);
+            if nargin==2
+                J1=1:size(xx,1);
+            end
+            J = W.Jepi;
+            [DensityMatrix, Bins] = hist3([xx(J) yy(J)], [Nbins Nbins]);
+            DensityMatrix = DensityMatrix./mean(DensityMatrix(:));
+            DensityMatrix = imgaussfilt(DensityMatrix,1);
+            Density = interp2(Bins{2}, Bins{1}, DensityMatrix, yy(J1), xx(J1), '*linear');
+        end
+        
         
         function scattershow(W,varargin)
             MD=Metadata(W.pth);

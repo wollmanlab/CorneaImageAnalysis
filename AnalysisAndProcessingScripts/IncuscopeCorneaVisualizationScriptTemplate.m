@@ -130,7 +130,7 @@ end
 
 
 
-for i=51:200
+for i=1:200
     clf
     ax1 = axes('Position',[0.1, 0.1, 0.4, 0.8])
 CorneaCells{i}.scatter('epi',find(CorneaCells{i}.epiScore>0.5),25*j)
@@ -174,7 +174,7 @@ imagesc(a)
 set(gca,'xtick',[1:50:251],'xticklabel',[0:50:250]/2)
 colormap(magma)
 xlabel('Time(h)')
-ylabel('Track#')
+ylabel('Track #')
 set(gcf,'color','k')
 set(gca,'color','k')
 set(gca,'xcolor','w')
@@ -303,3 +303,16 @@ title('Top 5%','color','w')
 xlabel('frame','color','w')
 ylabel('Distance From Wound','color','w')
       set(gcf, 'PaperPositionMode','auto','InvertHardCopy','off')
+      
+      
+      %%
+      for i=1%:2:220
+          ccellLbl = R.CorneaCellLbls{1}{i};
+          xx = ccellLbl.Centroids(:,1);
+          yy = ccellLbl.Centroids(:,2);
+          J = ccellLbl.Jepi;
+          [h ,Density,Bins, Color] = PlotColorCoded_v2(xx,yy,J, J, range(xx)/30, range(yy)/30 );shg
+          set(gcf,'color','k')
+          set(gca,'Position',[0 0 1 1],'xlim',[0 3000],'ylim',[0 2100],'color','k','CLim', [0,2])
+          drawnow;
+      end

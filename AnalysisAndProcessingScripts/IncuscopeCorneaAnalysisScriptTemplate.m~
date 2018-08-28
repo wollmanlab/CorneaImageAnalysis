@@ -45,6 +45,7 @@ frames = unique(cell2mat(PIV_MD.getSpecificMetadata('frame')));
 
 
 %% Make basic measurements
+dt = 24*(R.TimeVecs{1}(2)-R.TimeVecs{1}(1));
 PixelSize = MD.unique('PixelSize');
 for j=1:numel(R.PosNames);
     PIV = R.getPIVLbl(R.PosNames{j});
@@ -69,17 +70,17 @@ for j=1:numel(R.PosNames);
         SinAlpha(isnan(SinAlpha))=0;
         
         DistanceFromWound(:,i) = PixelSize*sqrt(x.^2+y.^2);
-        UMasked = PIV.UMasked(i);%drift correction on u and v
-        VMasked = PIV.VMasked(i);
+        UMasked = PixelSize*PIV.UMasked(i)/dt;%drift correction on u and v
+        VMasked = PixelSize*PIV.VMasked(i)/dt;%all in micron/h
         
         woundU = 0;%mean(UMasked);
         woundV = 0;%mean(VMasked);
         
-        RadialVelocity(:,i) = PixelSize*(CosAlpha.*(UMasked-woundU)+SinAlpha.*(VMasked-woundV)).*~PIV.indInWound(i);
-        TangentVelocity(:,i) = PixelSize*(SinAlpha.*(UMasked-woundU)-CosAlpha.*(VMasked-woundV)).*~PIV.indInWound(i);
+        RadialVelocity(:,i) = (CosAlpha.*(UMasked-woundU)+SinAlpha.*(VMasked-woundV)).*~PIV.indInWound(i);
+        TangentVelocity(:,i) = (SinAlpha.*(UMasked-woundU)-CosAlpha.*(VMasked-woundV)).*~PIV.indInWound(i);
         %UMasked = UMasked+Tforms(i+1,1)-Tforms(i,1);%drift correction on u and v
         %VMasked = VMasked+Tforms(i+1,2)-Tforms(i,2);
-        Speed(:,i) = PixelSize*sqrt(UMasked.^2+VMasked.^2).*~PIV.indInWound(i);
+        Speed(:,i) = sqrt(UMasked.^2+VMasked.^2).*~PIV.indInWound(i);
     end
     R.setData('DistanceFromWound',DistanceFromWound, R.PosNames{j})
     R.setData('RadialVelocity',RadialVelocity, R.PosNames{j})
@@ -141,9 +142,12 @@ for WellNum=1:numel(Wells)
     CorneaCells = R.getCorneaCellsLbl(R.PosNames{WellNum});
     for i=1:numel(Tracks)
         epiScoreTrack{i} = zeros(1,numel(Tracks(i).T));
+        DensityTrack{i} = zeros(1,numel(Tracks(i).T));
+        
         for j=1:numel(Tracks(i).T)
             if Tracks(i).tracksFeatIndxCG(j)
                 epiScoreTrack{i}(j) = CorneaCells{Tracks(i).T(j)}.epiScore(Tracks(i).tracksFeatIndxCG(j));
+                DensityTrack{i}(j) = CorneaCells{Tracks(i).T(j)}.Density(40, Tracks(i).tracksFeatIndxCG(j));
             else
                 epiScoreTrack{i}(j) = NaN;
             end

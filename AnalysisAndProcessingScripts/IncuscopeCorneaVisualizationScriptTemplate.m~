@@ -130,7 +130,7 @@ end
 
 
 
-for i=51:200
+for i=1:200
     clf
     ax1 = axes('Position',[0.1, 0.1, 0.4, 0.8])
 CorneaCells{i}.scatter('epi',find(CorneaCells{i}.epiScore>0.5),25*j)
@@ -174,7 +174,7 @@ imagesc(a)
 set(gca,'xtick',[1:50:251],'xticklabel',[0:50:250]/2)
 colormap(magma)
 xlabel('Time(h)')
-ylabel('Track#')
+ylabel('Track #')
 set(gcf,'color','k')
 set(gca,'color','k')
 set(gca,'xcolor','w')
@@ -249,39 +249,40 @@ print(gcf,'-dpng','-r300',['/bigstore/GeneralStorage/Alon/figsForLM/' 'ManyTrack
 
 %%
 figure
-J = logical(([R.Tracks{1}.epiRank]<1).*([R.Tracks{1}.epiRank]>0.95));
+J = logical(([R.Tracks{1}.epiRank]<0.05).*([R.Tracks{1}.epiRank]>0));
 J = find(J);
 for i=1:numel(J)
     
     T = R.Tracks{1}(J(i)).T(1:end);
     D = R.Tracks{1}(J(i)).DistFromWound;
     nanInds = find(isnan(D))
-    if any(nanInds)
-    G = nan(size(D));
-    skipInds = cumsum([1; diff(find(isnan(D)))>1]);
-    
-    for ind=1:numel(unique(skipInds))
-        jx = skipInds==ind;
-        indsToFill = nanInds(jx);
-        m = (D(indsToFill(end)+1)-D(indsToFill(1)-1))/(1+sum(jx));
-        G(indsToFill) = D(indsToFill(1)-1)+m*(1:sum(jx));
-    end
-    h = plot(T,D,'-',T,G,'--');
-    set(h(2),'color',get(h(1),'color'));
+    if any(nanInds)%fill gaps with linear interpolation and dashed lines
+        G = nan(size(D));
+        skipInds = cumsum([1; diff(find(isnan(D)))>1]);
+        
+        for ind=1:numel(unique(skipInds))
+            jx = skipInds==ind;s
+            indsToFill = nanInds(jx);
+            m = (D(indsToFill(end)+1)-D(indsToFill(1)-1))/(1+sum(jx));
+            G(indsToFill(1)-1:indsToFill(end)+1) = D(indsToFill(1)-1)+m*(0:sum(jx)+1);
+        end
+        h = plot(T,D,'-',T,G,'-.');
+        set(h(2),'color',get(h(1),'color'));
     else
+        h = plot(T,D,'-');
     end
-hold all
+    hold all
 end
 shg
 set(gcf,'color','k')
 set(gca,'color','k')
 set(gca,'xcolor','w')
 set(gca,'ycolor','w')
-title('Bottom 5%','color','w')
+title('Top 5%','color','w')
 xlabel('frame','color','w')
 ylabel('Distance From Wound','color','w')
       set(gcf, 'PaperPositionMode','auto','InvertHardCopy','off')
-%print(gcf,'-dpng','-r300',['/bigstore/GeneralStorage/Alon/figsForLM/' 'DistTracksBottom']);
+print(gcf,'-dpng','-r300',['/bigstore/GeneralStorage/Alon/figsForLM/' 'DistTracksTop']);
 %%
 J = logical(([R.Tracks{1}.epiRank]<0.05).*([R.Tracks{1}.epiRank]>0.0));
 JDist = arrayfun(@(x) x.DistFromWound(1), R.Tracks{1})<250;
@@ -302,3 +303,15 @@ title('Top 5%','color','w')
 xlabel('frame','color','w')
 ylabel('Distance From Wound','color','w')
       set(gcf, 'PaperPositionMode','auto','InvertHardCopy','off')
+      
+      
+      %%
+      figure('color','k')
+      i=1
+      ccellLbl = R.CorneaCellLbls{1}{i};
+xx = ccellLbl.Centroids(:,1);
+yy = ccellLbl.Centroids(:,2);
+J = ccellLbl.Jepi;
+[h ,Density,Bins, Color] = PlotColorCoded_v2(xx,yy,J, J, range(xx)/15, range(yy)/15 );shg
+set(gca,'Position',[0 0 1 1],'')
+axis equal tight off

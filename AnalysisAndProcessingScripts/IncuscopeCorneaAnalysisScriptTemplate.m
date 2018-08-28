@@ -142,15 +142,20 @@ for WellNum=1:numel(Wells)
     CorneaCells = R.getCorneaCellsLbl(R.PosNames{WellNum});
     for i=1:numel(Tracks)
         epiScoreTrack{i} = zeros(1,numel(Tracks(i).T));
+        DensityTrack{i} = zeros(1,numel(Tracks(i).T));
+        
         for j=1:numel(Tracks(i).T)
             if Tracks(i).tracksFeatIndxCG(j)
                 epiScoreTrack{i}(j) = CorneaCells{Tracks(i).T(j)}.epiScore(Tracks(i).tracksFeatIndxCG(j));
+                DensityTrack{i}(j) = CorneaCells{Tracks(i).T(j)}.Density(40, Tracks(i).tracksFeatIndxCG(j));
             else
                 epiScoreTrack{i}(j) = NaN;
+                DensityTrack{i}(j) = NaN;
             end
         end
     end
     [Tracks.('epiScoreTrack')] = epiScoreTrack{:};
+    [Tracks.('DensityTrack')] = DensityTrack{:};
     
     
     meanEpiScore = arrayfun(@(x) nanmean(x.epiScoreTrack),Tracks,'UniformOutput',false);
