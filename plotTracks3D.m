@@ -254,7 +254,7 @@ switch colorTime
         %gaps are depicted as a dotted black line
         for i = 1 : trackStartRow(end) + numSegments(end) - 1
             obsAvail = find(~isnan(tracksXP(:,i)));
-            plot3(axH,tracksXP(obsAvail,i),tracksYP(obsAvail,i),tracksZP(obsAvail,i),'k:');
+            plot3(axH,tracksXP(obsAvail,i),tracksYP(obsAvail,i),tracksZP(obsAvail,i),'k:','markersize', 2,'Linewidth', 0.5);
         end
 
         %get the fraction of each color in each time interval to be plotted
@@ -269,7 +269,8 @@ switch colorTime
 
         %overlay tracks with color coding wherever a feature has been detected
         for i=1:numTimePlot-1
-            plot3(axH,tracksXP(i:i+1,:),tracksYP(i:i+1,:),tracksZP(i:i+1,:),'color',colorOverTime(i,:));
+            plot3(axH,tracksXP(i:i+1,:),tracksYP(i:i+1,:),tracksZP(i:i+1,:),'-o','color',colorOverTime(i,:),'markerfacecolor',colorOverTime(i,:),'markersize', 1,'Linewidth', 0.5);
+            %scatter3(axH,tracksXP(i:i+1,:),tracksYP(i:i+1,:),tracksZP(i:i+1,:),20,colorOverTime(i,:),'filled');
         end
     case 'R'
         for i = 1 : trackStartRow(end) + numSegments(end) - 1

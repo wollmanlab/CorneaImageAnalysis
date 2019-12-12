@@ -1,10 +1,11 @@
-function Woundlbl = WoundTracker_v2(pth, Well)
+function Woundlbl = WoundTracker_v2(pth, Well,varargin)
 close all;
+channel = ParseInputs('channel','DeepBlue',varargin);
 
 MD=Metadata(pth); 
 frames = unique(cell2mat(MD.getSpecificMetadata('frame')));
 
-NucFrame=stkread(MD,'Channel','DeepBlue','Position',Well,'specific',1,'flatfieldcorrection',false);
+NucFrame=stkread(MD,'Channel',channel,'Position',Well,'specific',1,'flatfieldcorrection',false);
 N = 100;%point for wound tracking;
 Woundlbl = WoundLbl;
 Woundlbl.PosName = Well;
@@ -35,7 +36,7 @@ sprintf('%d out of %d',i,length(frames))
     switch IsThereAWound
         case 'Yes'
             try
-                NucFrame=stkread(MD,'Channel','DeepBlue','Position',Well,'specific',i,'flatfieldcorrection',false); 
+                NucFrame=stkread(MD,'Channel',channel,'Position',Well,'specific',i,'flatfieldcorrection',false); 
                 if i==1
                     XY = FindWoundPoly(NucFrame,Cent,N,'Present');
                     Circ = sum(sqrt(diff(XY(:,1)).^2+diff(XY(:,2)).^2));

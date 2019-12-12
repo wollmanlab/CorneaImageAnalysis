@@ -140,14 +140,17 @@ for WellNum=1:numel(Wells)
     
     %epiScore within each track, i.e., position within the epithelium
     CorneaCells = R.getCorneaCellsLbl(R.PosNames{WellNum});
+    Densities = cellfun(@(x) x.Density(50), CorneaCells,'UniformOutput', false);
+
     for i=1:numel(Tracks)
+        i
         epiScoreTrack{i} = zeros(1,numel(Tracks(i).T));
         DensityTrack{i} = zeros(1,numel(Tracks(i).T));
         
         for j=1:numel(Tracks(i).T)
             if Tracks(i).tracksFeatIndxCG(j)
                 epiScoreTrack{i}(j) = CorneaCells{Tracks(i).T(j)}.epiScore(Tracks(i).tracksFeatIndxCG(j));
-                DensityTrack{i}(j) = CorneaCells{Tracks(i).T(j)}.Density(40, Tracks(i).tracksFeatIndxCG(j));
+                DensityTrack{i}(j) = Densities{Tracks(i).T(j)}(Tracks(i).tracksFeatIndxCG(j))';
             else
                 epiScoreTrack{i}(j) = NaN;
                 DensityTrack{i}(j) = NaN;
@@ -175,22 +178,26 @@ for WellNum=1:numel(Wells)
     WoundCentroidXY = PIVlbl.WoundLbl.SmoothCentroid;
     Disps = arrayfun(@(x) PixelSize*([x.tracksCoordAmpCG(1:8:end)',x.tracksCoordAmpCG(2:8:end)']-WoundCentroidXY(x.T,:)),Tracks,'UniformOutput',false);
     [Tracks.('DisplacementFromWound')] = Disps{:};
-    
+        Disps = cellfun(@(x) [Smoothing(x(:,1)),Smoothing(x(:,2))],Disps,'UniformOutput',false);
+
     Dists = cellfun(@(x) sqrt(sum(x.^2,2)), Disps,'UniformOutput',false);
     [Tracks.('DistFromWound')] = Dists{:};
     
-    RadV = cellfun(@(x) diff(x), Dists,'UniformOutput',false);
+    RadV = cellfun(@(x) 0.5\diff(x), Dists,'UniformOutput',false);
     [Tracks.('RadialVelocity')] = RadV{:};
 
     %Velocity - 
     Velocity = arrayfun(@(x) 0.5\([x.tracksCoordAmpCG(9:8:end)',x.tracksCoordAmpCG(10:8:end)',x.tracksCoordAmpCG(11:8:end)']-[x.tracksCoordAmpCG(1:8:end-8)',x.tracksCoordAmpCG(2:8:end-8)',x.tracksCoordAmpCG(3:8:end-8)']),Tracks,'UniformOutput',false);
-    [Tracks.('Velocity')] = Velocity{:};
+    SmoothedVelocity = cellfun(@(x) [Smoothing(x(:,1)),Smoothing(x(:,2)),Smoothing(x(:,3))],Velocity,'UniformOutput',false);
+    [Tracks.('Velocity')] = SmoothedVelocity{:};
     
-     Speed = cellfun(@(x) sqrt(sum(x.^2,2)), Velocity,'UniformOutput',false);
+     Speed = cellfun(@(x) sqrt(sum(x.^2,2)), SmoothedVelocity,'UniformOutput',false);
      [Tracks.('Speed')] = Speed{:};
 
     R.setTracks(Tracks,R.PosNames{WellNum})
 end
+    clearvars Densities Tracks Speed Velocity RadV Dists Disps epiRank CorneaCells;
+
 %%
 R.saveResults
 %At this point, we should have a results object with PIV data and single

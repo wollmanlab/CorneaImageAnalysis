@@ -123,7 +123,7 @@ function CorneaCelllbl = CorneaCellsConstructor(fpath, Well,frame)
     
     
     %Apply drift correction to centroids!
-    Tforms = MD.getSpecificMetadata('driftTform','Position',Well, 'frame', frame);
+    Tforms = MD.getSpecificMetadata('driftTform','Position',Well, 'frame', i);
     dY = Tforms{1}(7);
     dX = Tforms{1}(8);
     Centroids = Centroids+repmat([dY, dX, 0],n,1);

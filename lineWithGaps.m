@@ -53,7 +53,7 @@ if(ishandle(in.Handle))
     h = in.Handle;
     set(h,forward);
 else
-    h = line(forward);
+    h = line(forward,'LineWidth', 1.5);
 end
 
 end

@@ -284,11 +284,11 @@ if newFigure
         maxImage = max(tmpImage);
         imshow(image,[minImage maxImage]); %plot the image
     else %if user did not supply an image
-        imshow(ones(maxYCoord,maxXCoord),[]); %plot an empty image
+    %    imshow(ones(maxYCoord,maxXCoord),[]); %plot an empty image
     end
 
     %set figure axes limits
-    axis([minXCoord maxXCoord minYCoord maxYCoord]);
+ %   axis([minXCoord maxXCoord minYCoord maxYCoord]);
 
     %show coordinates on axes
     axH = gca;
@@ -326,7 +326,7 @@ switch colorTime
         lineWithGaps(tracksXP,tracksYP,removeGapParams);
         
         %get the overall color per time interval
-        colorOverTime = timeColormap(numTimePlot);
+        colorOverTime = parula(numTimePlot);
 
         %overlay tracks with color coding wherever a feature has been detected
         for i=1:numTimePlot-1
@@ -504,12 +504,21 @@ if indicateSE %if user wants to indicate starts and ends
     
     switch colorTime
         case {'1','2','3'}
-            scatterColor = 'k';
+            scatterColor = 'w';
         otherwise
             scatterColor = colorTime;
     end
-    scatter(axH,allStartInfo(:,1),allStartInfo(:,2),[],scatterColor,'o');
-    scatter(axH,allEndInfo(:,1),allEndInfo(:,2),[],scatterColor,'square');
+    
+    if colorTime=='3'
+    for i=1:23
+        %lineWithGaps(tracksXP(:,i:23:end),tracksYP(:,i:23:end),'Color',extendedColors(i),'Marker',markerType);
+        scatter(axH,allStartInfo(i:23:end,1),allStartInfo(i:23:end,2),[],extendedColors(i),'o','filled');
+        scatter(axH,allEndInfo(i:23:end,1),allEndInfo(i:23:end,2),[],extendedColors(i),'rx');
+    end
+    else
+    scatter(axH,allStartInfo(:,1),allStartInfo(:,2),[],scatterColor,'o','filled');
+    scatter(axH,allEndInfo(:,1),allEndInfo(:,2),[],'rx');
+    end
 
 end %(if indicateSE)
 

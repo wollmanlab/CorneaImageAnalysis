@@ -80,7 +80,7 @@ classdef CorneaCellsLbl < handle %class of single cell processing of a whole cor
                         disp('range out of bounds, drawing all points up to the total # of cells.')
                         scatter3(W.Centroids(range,1),W.Centroids(range,2),dz-W.Centroids(range,3),[],tzeva(range,:));
                     else
-                        scatter3(W.Centroids(range,1),W.Centroids(range,2),dz-W.Centroids(range,3),[],tzeva(range,:));%,'filled','MarkerFaceAlpha',0.3
+                        scatter3(W.Centroids(range,1),W.Centroids(range,2),dz-W.Centroids(range,3),[],tzeva(range,:),'filled','MarkerFaceAlpha',0.25);%,'filled','MarkerFaceAlpha',0.3
                     end;
                 end
             end
@@ -173,7 +173,8 @@ classdef CorneaCellsLbl < handle %class of single cell processing of a whole cor
         end
         
         function Density = Density(W,Nbins,J1)
-            
+%            MD=Metadata(W.pth);
+%            PixelSize = MD.unique('PixelSize');
             xx = W.Centroids(:,1);
             yy = W.Centroids(:,2);
             if nargin==2
@@ -181,9 +182,11 @@ classdef CorneaCellsLbl < handle %class of single cell processing of a whole cor
             end
             J = W.Jepi;
             [DensityMatrix, Bins] = hist3([xx(J) yy(J)], [Nbins Nbins]);
+            %BinSize = diff(Bins{1}(1:2))*diff(Bins{2}(1:2))*(PixelSize^2);%microns^2
+            %DensityMatrix = DensityMatrix/BinSize; %cells per micron^2 in xy
             DensityMatrix = DensityMatrix./mean(DensityMatrix(:));
             DensityMatrix = imgaussfilt(DensityMatrix,1);
-            Density = interp2(Bins{2}, Bins{1}, DensityMatrix, yy(J1), xx(J1), '*linear');
+            Density = interp2(Bins{2}, Bins{1}, DensityMatrix, yy(J1), xx(J1), 'spline');
         end
         
         
